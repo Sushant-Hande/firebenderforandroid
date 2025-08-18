@@ -1,6 +1,6 @@
 # Quiz Android App
 
-A modern, feature-rich Quiz Android application developed while video coding with Firebender. This app allows users to take quizzes, view their quiz history, check leaderboards, and more. Built with best practices in mind, it is designed for scalability, maintainability, and a great user experience.
+A modern, feature-rich Quiz Android application developed while vibe coding with Firebender. This app allows users to take quizzes, view their quiz history, check leaderboards, and more. Built with best practices in mind, it is designed for scalability, maintainability, and a great user experience.
 
 ## Table of Contents
 - [Features](#features)
