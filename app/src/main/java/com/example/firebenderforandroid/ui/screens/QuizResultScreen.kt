@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -28,12 +29,15 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.airbnb.lottie.compose.LottieConstants
 import kotlinx.coroutines.delay
+import com.example.firebenderforandroid.viewmodel.QuizViewModel
+import com.example.firebenderforandroid.model.QuizQuestionReview
 
 @Composable
 fun QuizResultScreen(
     navController: NavController? = null,
     quizId: String? = null,
-    score: Int? = null
+    score: Int? = null,
+    quizViewModel: QuizViewModel
 ) {
     // In a real app: pass score, user, and quizId via nav arguments/shared ViewModel
     val finalScore = score ?: 0
@@ -51,6 +55,7 @@ fun QuizResultScreen(
     }
     val context = LocalContext.current
     Surface(modifier = Modifier.fillMaxSize()) {
+        val reviewList = quizViewModel.getQuizReview()
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -126,6 +131,48 @@ fun QuizResultScreen(
             ) {
                 Icon(Icons.Filled.Share, contentDescription = "Share", Modifier.padding(end = 8.dp))
                 Text("Share Result")
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            // Quiz Review Section
+            Text("Quiz Review", style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.height(12.dp))
+            reviewList.forEach { result ->
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    tonalElevation = 2.dp
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text("Q: ${result.question}", style = MaterialTheme.typography.bodyLarge)
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text("Your Answer: ", style = MaterialTheme.typography.labelMedium)
+                        Text(
+                            result.userAnswer ?: "No answer",
+                            color = if (result.userAnswer == result.correctAnswer) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            "Correct Answer: ${result.correctAnswer}",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                        Button(
+                            onClick = {
+                                val searchUrl = "https://en.wikipedia.org/wiki/${
+                                    result.correctAnswer.replace(
+                                        ' ',
+                                        '_'
+                                    )
+                                }"
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(searchUrl))
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Text("Learn More")
+                        }
+                    }
+                }
             }
         }
     }

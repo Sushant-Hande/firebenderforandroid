@@ -6,12 +6,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.firebenderforandroid.model.Question
 import com.example.firebenderforandroid.model.Quiz
+import com.example.firebenderforandroid.model.QuizQuestionReview
 import com.example.firebenderforandroid.repository.QuizRepository
 
 class QuizViewModel(quizId: String?) : ViewModel() {
     private val repository = QuizRepository()
     var quiz: Quiz? by mutableStateOf(null)
-        private set
     var currentIndex by mutableStateOf(0)
         private set
     var selectedAnswer by mutableStateOf<Int?>(null)
@@ -21,8 +21,13 @@ class QuizViewModel(quizId: String?) : ViewModel() {
     var isQuizComplete by mutableStateOf(false)
         private set
 
+    // Track user's selected answers per question
+    private val userAnswers = mutableListOf<Int?>()
+
     init {
         quiz = quizId?.let { repository.getQuizById(it) }
+        // Initialize userAnswers with null entries for each question
+        quiz?.questions?.forEach { _ -> userAnswers.add(null) }
     }
 
     val currentQuestion: Question?
@@ -30,6 +35,7 @@ class QuizViewModel(quizId: String?) : ViewModel() {
 
     fun submitAnswer(answerIndex: Int) {
         selectedAnswer = answerIndex
+        if (currentIndex < userAnswers.size) userAnswers[currentIndex] = answerIndex
     }
 
     fun commitAnswer() {
@@ -53,8 +59,22 @@ class QuizViewModel(quizId: String?) : ViewModel() {
         selectedAnswer = null
         score = 0
         isQuizComplete = false
+        userAnswers.clear()
+        quiz?.questions?.forEach { _ -> userAnswers.add(null) }
     }
 
     val lastScore: Int
         get() = score
+
+    fun getQuizReview(): List<QuizQuestionReview> {
+        val questions = quiz?.questions ?: return emptyList()
+        return questions.mapIndexed { idx, q ->
+            QuizQuestionReview(
+                question = q.text,
+                options = q.options,
+                correctAnswer = q.options[q.correctAnswerIndex],
+                userAnswer = userAnswers.getOrNull(idx)?.let { q.options[it] }
+            )
+        }
+    }
 }

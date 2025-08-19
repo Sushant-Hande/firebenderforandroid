@@ -22,19 +22,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun QuizQuestionScreen(quizId: String?, navController: NavController) {
-    val viewModel = remember { QuizViewModel(quizId) }
-    val currentQuestion = viewModel.currentQuestion
-    val totalQuestions = viewModel.quiz?.questions?.size ?: 0
+fun QuizQuestionScreen(quizId: String?, navController: NavController, quizViewModel: QuizViewModel) {
+    val currentQuestion = quizViewModel.currentQuestion
+    val totalQuestions = quizViewModel.quiz?.questions?.size ?: 0
     val progress =
-        if (totalQuestions != 0) (viewModel.currentIndex + 1) / totalQuestions.toFloat() else 0f
+        if (totalQuestions != 0) (quizViewModel.currentIndex + 1) / totalQuestions.toFloat() else 0f
 
-    if (viewModel.isQuizComplete) {
+    if (quizViewModel.isQuizComplete) {
         LaunchedEffect(Unit) {
             withContext(Dispatchers.IO) {
-                UserRepository.submitQuiz(viewModel.score, quizId ?: "")
+                UserRepository.submitQuiz(quizViewModel.score, quizId ?: "")
             }
-            navController.navigate("quiz_result?quizId=${quizId ?: ""}&score=${viewModel.score}") {
+            navController.navigate("quiz_result?quizId=${quizId ?: ""}&score=${quizViewModel.score}") {
                 popUpTo("quiz_question") { inclusive = true }
             }
         }
@@ -52,12 +51,12 @@ fun QuizQuestionScreen(quizId: String?, navController: NavController) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Question ${(viewModel.currentIndex + 1).coerceAtLeast(1)} of $totalQuestions",
+                        "Question ${(quizViewModel.currentIndex + 1).coerceAtLeast(1)} of $totalQuestions",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        "${viewModel.score} pts",
+                        "${quizViewModel.score} pts",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -85,7 +84,7 @@ fun QuizQuestionScreen(quizId: String?, navController: NavController) {
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             currentQuestion?.options?.forEachIndexed { idx, option ->
-                                val selected = viewModel.selectedAnswer == idx
+                                val selected = quizViewModel.selectedAnswer == idx
                                 val backgroundColor = if (selected)
                                     MaterialTheme.colorScheme.secondaryContainer
                                 else
@@ -101,7 +100,7 @@ fun QuizQuestionScreen(quizId: String?, navController: NavController) {
                                         .clip(RoundedCornerShape(12.dp))
                                         .background(backgroundColor)
                                         .clickable(enabled = true) {
-                                            viewModel.submitAnswer(idx)
+                                            quizViewModel.submitAnswer(idx)
                                         },
                                     tonalElevation = if (selected) 3.dp else 0.dp,
                                     shadowElevation = if (selected) 8.dp else 0.dp,
@@ -109,7 +108,7 @@ fun QuizQuestionScreen(quizId: String?, navController: NavController) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         RadioButton(
                                             selected = selected,
-                                            onClick = { viewModel.submitAnswer(idx) },
+                                            onClick = { quizViewModel.submitAnswer(idx) },
                                             colors = RadioButtonDefaults.colors(
                                                 selectedColor = MaterialTheme.colorScheme.primary
                                             )
@@ -123,13 +122,13 @@ fun QuizQuestionScreen(quizId: String?, navController: NavController) {
                                     }
                                 }
                             }
-                            if (viewModel.selectedAnswer != null) {
+                            if (quizViewModel.selectedAnswer != null) {
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Button(
-                                    onClick = { viewModel.goToNextQuestion() },
+                                    onClick = { quizViewModel.goToNextQuestion() },
                                     modifier = Modifier.align(Alignment.End)
                                 ) {
-                                    Text(if (viewModel.currentIndex == totalQuestions - 1) "Finish" else "Next")
+                                    Text(if (quizViewModel.currentIndex == totalQuestions - 1) "Finish" else "Next")
                                 }
                             }
                         }

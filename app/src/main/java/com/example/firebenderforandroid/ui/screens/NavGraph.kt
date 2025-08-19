@@ -17,6 +17,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.firebenderforandroid.repository.QuizRepository
+import com.example.firebenderforandroid.viewmodel.QuizViewModel
 import kotlin.random.Random
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -43,6 +45,8 @@ fun AnimatedScreen(content: @Composable () -> Unit) {
 
 @Composable
 fun QuizAppNavGraph(navController: NavHostController = rememberNavController()) {
+    val quizViewModel = remember { QuizViewModel(null) }
+
     NavHost(
         navController = navController,
         startDestination = "dashboard"
@@ -56,7 +60,11 @@ fun QuizAppNavGraph(navController: NavHostController = rememberNavController()) 
             )
         ) { backStackEntry ->
             val quizId = backStackEntry.arguments?.getString("quizId")
-            AnimatedScreen { QuizQuestionScreen(quizId, navController) }
+            if (quizViewModel.quiz == null && quizId != null) {
+                quizViewModel.quiz = QuizRepository().getQuizById(quizId)
+                quizViewModel.resetQuiz() // ensure all question state is reset
+            }
+            AnimatedScreen { QuizQuestionScreen(quizId, navController, quizViewModel) }
         }
         composable(
             route = "quiz_result?quizId={quizId}&score={score}",
@@ -69,7 +77,7 @@ fun QuizAppNavGraph(navController: NavHostController = rememberNavController()) 
         ) { backStackEntry ->
             val quizId = backStackEntry.arguments?.getString("quizId")
             val score = backStackEntry.arguments?.getInt("score")
-            AnimatedScreen { QuizResultScreen(navController, quizId = quizId, score = score) }
+            AnimatedScreen { QuizResultScreen(navController, quizId, score, quizViewModel) }
         }
         composable("leaderboard") { AnimatedScreen { LeaderboardScreen(navController) } }
     }
